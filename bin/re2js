@@ -1,0 +1,21 @@
+#!/bin/bash
+
+RET=`re2c -isc "$@"`
+ERRNO=$?
+
+if [ $ERRNO -eq 0 ] ; then
+	echo "$RET" | \
+	sed 's|^yy\([^:]*\)*\:|case \1:|' | \
+	sed 's|[*]cursor[+][+]|this._charAt(cursor++)|' | \
+	sed 's|[[*][+][+]cursor|this._charAt(++cursor)|' | \
+	sed 's|[*]cursor|this._charAt(cursor)|' | \
+	sed 's|yych = \*\([^;]*\)|yych = this._charAt\1|' | \
+	sed 's|goto case \([^;]*\)|{ gotoCase = \1; continue; }|' | \
+	sed 's|yych <= \(0x[0-9a-fA-f]*\)|yych <= String.fromCharCode(\1)|' | \
+	sed 's|unsigned\ int|var|' | \
+	sed 's|var\ yych|case 1: var yych|'
+	exit $?
+fi
+
+echo $RET
+exit $ERRNO
